@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
 
@@ -15,24 +14,22 @@ func main() {
 	config.LoadEnv()
 	log.Print(os.Getenv("APP_ENV"))
 
-	// Connect to MongoDB and Redis
-	config.MongoClient = config.ConnectMongoDB()
-	config.RedisClient = config.ConnectRedis()
-
-	// Test MongoDB and Redis connection
-	log.Print(os.Getenv("MONGO_URI"))
-	log.Print(os.Getenv("REDIS_URL"))
-	if err := config.MongoClient.Ping(context.Background(), nil); err != nil {
-		log.Fatal("Failed to connect to MongoDB: ", err)
-	}
-
-	if err := config.RedisClient.Ping(context.Background()).Err(); err != nil {
-		log.Fatal("Failed to connect to Redis: ", err)
-	}
+	config.ConnectMongoDB()
+	config.ConnectRedis()
 
 	app := fiber.New()
 
 	handler.SetupRoutes(app)
 
-	app.Listen(":8080")
+	go func() {
+		if err := app.Listen(":8080"); err != nil {
+			log.Fatal("Error starting server: ", err)
+		}
+	}()
+
+	config.GracefulShutdown()
+
+	// Exit the program after shutdown
+	log.Println("Graceful shutdown completed")
+	os.Exit(0)
 }
