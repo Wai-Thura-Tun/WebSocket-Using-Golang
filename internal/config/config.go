@@ -16,12 +16,15 @@ import (
 )
 
 var (
-	MongoClient    *mongo.Client
-	RedisClient    *redis.Client
-	UserCollection *mongo.Collection
-	once           sync.Once
-	ctx            context.Context
-	cancel         context.CancelFunc
+	MongoClient       *mongo.Client
+	RedisClient       *redis.Client
+	UserCollection    *mongo.Collection
+	MatchCollection   *mongo.Collection
+	MessageCollection *mongo.Collection
+	mongoOnce         sync.Once
+	redisOnce         sync.Once
+	ctx               context.Context
+	cancel            context.CancelFunc
 )
 
 func LoadEnv() {
@@ -32,7 +35,7 @@ func LoadEnv() {
 }
 
 func ConnectMongoDB() {
-	once.Do(func() {
+	mongoOnce.Do(func() {
 		ctx, cancel = context.WithTimeout(context.Background(), 30*time.Second)
 		uri := os.Getenv("MONGO_URI")
 		if uri == "" {
@@ -54,11 +57,13 @@ func ConnectMongoDB() {
 
 		MongoClient = client
 		UserCollection = client.Database("test_db").Collection("users")
+		MatchCollection = client.Database("test_db").Collection("matches")
+		MessageCollection = client.Database("test_db").Collection("messages")
 	})
 }
 
 func ConnectRedis() {
-	once.Do(func() {
+	redisOnce.Do(func() {
 		addr := os.Getenv("REDIS_URL")
 		if addr == "" {
 			log.Fatal("❌ REDIS_URL is not set in environment variables")
@@ -66,10 +71,10 @@ func ConnectRedis() {
 
 		RedisClient = redis.NewClient(&redis.Options{
 			Addr:     addr,
+			Username: "",
 			Password: "",
 			DB:       0,
 		})
-
 		// Ping Redis to verify connection
 		_, err := RedisClient.Ping(context.Background()).Result()
 		if err != nil {

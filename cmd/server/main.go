@@ -5,7 +5,8 @@ import (
 	"os"
 
 	"github.com/Wai-Thura-Tun/WebSocket-Using-Golang/internal/config"
-	"github.com/Wai-Thura-Tun/WebSocket-Using-Golang/internal/handler"
+	"github.com/Wai-Thura-Tun/WebSocket-Using-Golang/internal/handlers"
+	"github.com/Wai-Thura-Tun/WebSocket-Using-Golang/internal/ws"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -17,9 +18,13 @@ func main() {
 	config.ConnectMongoDB()
 	config.ConnectRedis()
 
+	//  Initilize GateWay
+	gateway := ws.NewGateWay()
+	go gateway.Run()
+
 	app := fiber.New()
 
-	handler.SetupRoutes(app)
+	handlers.SetupRoutes(app, gateway)
 
 	go func() {
 		if err := app.Listen(":8080"); err != nil {

@@ -4,12 +4,13 @@ import (
 	"context"
 
 	"github.com/Wai-Thura-Tun/WebSocket-Using-Golang/internal/config"
-	"github.com/Wai-Thura-Tun/WebSocket-Using-Golang/internal/model"
+	"github.com/Wai-Thura-Tun/WebSocket-Using-Golang/internal/models"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateUser(user model.User) error {
+func CreateUser(user models.User) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
@@ -19,9 +20,13 @@ func CreateUser(user model.User) error {
 	return err
 }
 
-func GetUserByID(userID string) (*model.User, error) {
-	var user model.User
-	err := config.UserCollection.FindOne(context.Background(), bson.M{"_id": userID}).Decode(&user)
+func GetUserByID(userID string) (*models.User, error) {
+	var user models.User
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, err
+	}
+	err = config.UserCollection.FindOne(context.Background(), bson.M{"_id": objectID}).Decode(&user)
 	if err != nil {
 		return nil, err
 	}

@@ -10,14 +10,19 @@ services:
       - REDIS_URL=redis:6379
       - PORT=8080=value
     depends_on:
-      - redis
       - mongo
+      - redis
     restart: always
   redis:
     container_name: redis
     build: ./redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     restart: always
 
   mongo:

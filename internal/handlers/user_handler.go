@@ -1,8 +1,8 @@
-package handler
+package handlers
 
 import (
-	"github.com/Wai-Thura-Tun/WebSocket-Using-Golang/internal/model"
-	"github.com/Wai-Thura-Tun/WebSocket-Using-Golang/internal/service"
+	"github.com/Wai-Thura-Tun/WebSocket-Using-Golang/internal/models"
+	"github.com/Wai-Thura-Tun/WebSocket-Using-Golang/internal/services"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -13,13 +13,13 @@ func NewUserHandler() *UserHandler {
 }
 
 func (h *UserHandler) CreateUser(c *fiber.Ctx) error {
-	var user model.User
+	var user models.User
 	if err := c.BodyParser(&user); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error": "Invalid request payload",
 		})
 	}
-	err := service.CreateUser(user)
+	err := services.CreateUser(user)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": "Unable to create user",
